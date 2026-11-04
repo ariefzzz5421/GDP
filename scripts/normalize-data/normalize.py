@@ -139,4 +139,3 @@ print('Cohort',latest,cohort)
 
 
 write(OUT/'provenance.json',{p.name:json.loads(p.read_text()) for p in RAW.glob('*.meta.json')})
-

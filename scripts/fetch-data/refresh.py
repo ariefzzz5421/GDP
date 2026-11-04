@@ -53,4 +53,3 @@ if __name__=='__main__':
  with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(fetch,URLS.items()))
 
  subprocess.run([sys.executable,str(ROOT/'scripts/normalize-data/normalize.py')],check=True)
-

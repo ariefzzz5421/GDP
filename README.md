@@ -1,5 +1,7 @@
 # GDP — Global Economic Observatory
 
+[Open the live observatory](https://gdp-observatory.vercel.app)
+
 An interactive economic history explorer built with Next.js App Router, TypeScript, Tailwind CSS and Apache ECharts. Oswald 700 and Inter are self-hosted through `next/font/google`.
 
 ## Run locally

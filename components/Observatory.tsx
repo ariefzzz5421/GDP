@@ -79,9 +79,7 @@ export default function Observatory({
     "IDN",
   ]);
   const [compare, setCompare] = useState<string[]>([
-    "USA",
-    "CHN",
-    initialCountry,
+    ...new Set(["USA", "CHN", initialCountry]),
   ]);
   const [highlight, setHighlight] = useState(initialCountry);
   const [speed, setSpeed] = useState(1);
@@ -1035,7 +1033,7 @@ export default function Observatory({
                   Ranking / {metric === "gdp" ? "GDP" : "per capita"}
                 </small>
                 <strong>
-                  {dr
+                  {ranking.some((r) => r.code === dc.code)
                     ? `#${ranking.findIndex((r) => r.code === dc.code) + 1}`
                     : "—"}
                 </strong>
