@@ -24,7 +24,7 @@ Open http://localhost:3000. No database, API key or runtime environment variable
 - `/country/idn`: country profile; ISO alpha-3 country routes are prerendered.
 - `/methodology`: definitions, attribution, boundaries, units, data status and refresh policy.
 
-Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita, fixed or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Motion honors reduced-motion preferences. Snapshot failures offer retry.
+Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita, fixed Top 10/20/30/100 or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Motion honors reduced-motion preferences. Snapshot failures offer retry.
 
 ## Data — definitions are deliberately separate
 
@@ -38,7 +38,7 @@ There are 11,764 modern, 14,329 historical and 9,297 IMF country-year records in
 
 World Bank indicators: `NY.GDP.MKTP.CD`, `NY.GDP.PCAP.CD`, `NY.GDP.MKTP.KD.ZG`. World Bank reported history is labelled actual, subject to revision and underlying national statistical estimation. Maddison values are historical estimates; total GDP is derived as GDP per capita × population **in thousands × 1,000**. IMF `NGDPD` billions are converted to dollars. IMF `LATEST_ACTUAL_ANNUAL_DATA` is read **per indicator**, not inferred from a universal year: observations up to that boundary are actual; later observations through 2026 are estimates, and 2027 onward are projections.
 
-The default national cohort is the top 30 by 2025 World Bank nominal GDP, including Indonesia. The cohort reference year is the latest year with at least 150 national observations. Dynamic national rankings and all-available economy rankings are different universes. The leaderboard includes separately reported territories and excludes regional aggregates. Rankings never combine years or datasets. Missing values remain missing.
+The default national cohort is the top 30 by 2025 World Bank nominal GDP, including Indonesia. Top 100 uses a separately stored 100-country cohort from the same year. The cohort reference year is the latest year with at least 150 national observations. Dynamic national rankings and all-available economy rankings are different universes. The leaderboard includes separately reported territories and excludes regional aggregates. Rankings never combine years or datasets. Missing values remain missing.
 
 Modern flags identify series, not historical sovereignty. Former USSR, Yugoslavia, Czechoslovakia and former Sudan are excluded from historical normalization rather than mapped to successor states. Other national series retain source boundary conventions. GDP is not a measure of individual welfare or inequality.
 

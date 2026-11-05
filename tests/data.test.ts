@@ -52,6 +52,8 @@ test("fixed national cohort is exactly 30 and includes Indonesia", () => {
   const m = read("manifest");
   assert.equal(new Set(m.cohort).size, 30);
   assert.ok(m.cohort.includes("IDN"));
+  assert.equal(new Set(m.cohort100).size, 100);
+  assert.deepEqual(m.cohort100.slice(0, 30), m.cohort);
   assert.ok(
     m.cohort.every(
       (code: string) =>

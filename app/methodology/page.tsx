@@ -168,8 +168,9 @@ export default function Methodology() {
           nominal GDP in {manifest.cohortYear}, including Indonesia. This
           reference year is the latest year with GDP observations for at least
           150 national economies. It is not a list of developed economies. Top
-          10 and Top 20 show the highest selected-metric values within that
-          cohort unless dynamic ranking is selected.
+          100 tracks the 100 largest national economies from the same reference
+          year. Top 10 and Top 20 show the highest selected-metric values within
+          the Top 30 cohort unless dynamic ranking is selected.
         </p>
         <p>
           Dynamic rankings use available national observations in the selected
