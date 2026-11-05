@@ -44,6 +44,7 @@ import RaceChart from "@/components/charts/RaceChart";
 import Leaderboard from "@/components/leaderboard/Leaderboard";
 
 import Flag from "@/components/Flag";
+import HighlightPicker from "@/components/HighlightPicker";
 
 import { download, exportRace } from "@/lib/charts/export";
 
@@ -124,7 +125,8 @@ export default function Observatory({
     );
     if (q.get("metric") === "pc") setMetric("pc");
     const c = q.get("cohort");
-    if (c && ["10", "20", "30", "all", "selected"].includes(c)) setCohort(c);
+    if (c && ["10", "20", "30", "100", "all", "selected"].includes(c))
+      setCohort(c);
     setDynamicCohort(q.get("dynamic") === "1");
     const parse = (key: string) =>
       q
@@ -248,7 +250,11 @@ export default function Observatory({
     if (cohort === "all") return rows;
     rows = dynamicCohort
       ? rows.filter((r) => countryMap.get(r.code)?.national)
-      : rows.filter((r) => manifest.cohort.includes(r.code));
+      : rows.filter((r) =>
+          (cohort === "100" ? manifest.cohort100 : manifest.cohort).includes(
+            r.code,
+          ),
+        );
     return rows.slice(0, Number(cohort));
   }, [ranking, cohort, dynamicCohort, selected]);
 
@@ -529,6 +535,7 @@ export default function Observatory({
               <option value="10">Top 10</option>
               <option value="20">Top 20</option>
               <option value="30">Top 30</option>
+              <option value="100">Top 100</option>
               <option value="all">All available</option>
               <option value="selected">My selected countries</option>
             </select>
@@ -540,33 +547,23 @@ export default function Observatory({
               onChange={(e) => setDynamicCohort(e.target.value === "dynamic")}
             >
               <option value="fixed">
-                Today’s Top 30, tracked historically
+                Today’s Top {cohort === "100" ? "100" : "30"}, tracked
+                historically
               </option>
               <option value="dynamic">
                 Dynamic national ranking each year
               </option>
             </select>
           )}
-          <label className="highlight-selector">
-            <Focus size={14} /> Highlight
-            <Flag country={focusedCountry} />
-            <select
-              aria-label="Highlight country"
-              value={focusedCountry.code}
-              onChange={(e) => {
-                const code = e.target.value;
-                setHighlight(code);
-                if (cohort === "selected" && !selected.includes(code))
-                  setSelected([...selected, code]);
-              }}
-            >
-              {countries.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <HighlightPicker
+            countries={countries}
+            country={focusedCountry}
+            onSelect={(code) => {
+              setHighlight(code);
+              if (cohort === "selected" && !selected.includes(code))
+                setSelected([...selected, code]);
+            }}
+          />
           <label className="event-toggle">
             <input
               type="checkbox"

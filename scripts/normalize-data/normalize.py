@@ -124,11 +124,12 @@ years=sorted({r['year'] for r in modern['rows']},reverse=True)
 
 latest=next(y for y in years if sum(r['year']==y and r['code'] in national and r['gdp'] is not None for r in modern['rows'])>=150)
 
-cohort=[r['code'] for r in sorted([r for r in modern['rows'] if r['year']==latest and r['code'] in national and r['gdp'] is not None],key=lambda r:r['gdp'],reverse=True)[:30]]
+cohort100=[r['code'] for r in sorted([r for r in modern['rows'] if r['year']==latest and r['code'] in national and r['gdp'] is not None],key=lambda r:r['gdp'],reverse=True)[:100]]
+cohort=cohort100[:30]
 
 if 'IDN' not in cohort:cohort[-1]='IDN'
 
-manifest={'countries':sorted(countries,key=lambda c:c['name']),'cohort':cohort,'cohortYear':latest,'datasets':{d['mode']:{k:v for k,v in d.items() if k!='rows'} for d in [modern,historical,outlook]}}
+manifest={'countries':sorted(countries,key=lambda c:c['name']),'cohort':cohort,'cohort100':cohort100,'cohortYear':latest,'datasets':{d['mode']:{k:v for k,v in d.items() if k!='rows'} for d in [modern,historical,outlook]}}
 
 for d in [modern,historical,outlook]:write(OUT/(d['mode']+'.json'),d);print(d['mode'],len(d['rows']),d['minYear'],d['maxYear'])
 
