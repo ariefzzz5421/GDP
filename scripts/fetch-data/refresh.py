@@ -8,7 +8,7 @@ URLS={'wb-countries.json':'https://api.worldbank.org/v2/country?format=json&per_
 
 URLS['imf-weo.xlsx']='https://data.imf.org/-/media/iData/External-Storage/Documents/0FA3DC49A04D446E9D69DBEB29979E1C/en/WEOOct2026all.xlsx'
 
-for name,indicator in [('gdp','NY.GDP.MKTP.CD'),('pc','NY.GDP.PCAP.CD'),('growth','NY.GDP.MKTP.KD.ZG')]: URLS[f'wb-{name}.json']=f'https://api.worldbank.org/v2/country/all/indicator/{indicator}?format=json&per_page=30000&date=1960:2026'
+for name,indicator in [('gdp','NY.GDP.MKTP.CD'),('pc','NY.GDP.PCAP.CD'),('pop','SP.POP.TOTL'),('growth','NY.GDP.MKTP.KD.ZG')]: URLS[f'wb-{name}.json']=f'https://api.worldbank.org/v2/country/all/indicator/{indicator}?format=json&per_page=30000&date=1960:2026'
 
 def fetch(item):
 

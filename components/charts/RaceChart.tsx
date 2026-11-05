@@ -5,7 +5,8 @@ import AnimatedValue from "@/components/charts/AnimatedValue";
 import Flag from "@/components/Flag";
 
 import {
-  compact,
+  formatMetric,
+  metricStatus,
   type Country,
   type Observation,
   type Metric,
@@ -68,7 +69,7 @@ export default function RaceChart({
                 transform: n ? "translateX(-50%)" : undefined,
               }}
             >
-              {compact(n * max)}
+              {formatMetric(n * max, metric)}
             </span>
           ))}
         </div>
@@ -98,7 +99,7 @@ export default function RaceChart({
                 transitionDuration: `${duration}ms`,
               }}
               onClick={() => onCountry(r.code)}
-              title={`${c.name} · ${year} · ${source}\nGDP: ${r.gdp?.toLocaleString("en-US") ?? "unavailable"}\nPer capita: ${r.pc?.toLocaleString("en-US") ?? "unavailable"}\n${unit} · ${metric === "pc" ? (r.pcStatus ?? r.status) : r.status}`}
+              title={`${c.name} · ${year} · ${source}\nGDP: ${r.gdp?.toLocaleString("en-US") ?? "unavailable"}\nPer capita: ${r.pc?.toLocaleString("en-US") ?? "unavailable"}\nPopulation: ${r.pop?.toLocaleString("en-US") ?? "unavailable"} people\n${unit} · ${metricStatus(r, metric)}`}
             >
               <span className="race-label">
                 <small>{String(index + 1).padStart(2, "0")}</small>
@@ -115,7 +116,7 @@ export default function RaceChart({
                   }}
                 >
                   <span className="bar-value">
-                    <AnimatedValue value={r[metric]} duration={duration} />
+                    <AnimatedValue value={r[metric]} duration={duration} metric={metric} />
                   </span>
                 </span>
               </span>

@@ -74,6 +74,14 @@ export default function Methodology() {
           average, not a measure of median income, household wealth, inequality,
           or wellbeing.
         </p>
+        <p>
+          <strong>Population</strong> counts residents in people. Its rankings
+          use national economies with a reported value in the selected year and
+          source. Population is independent of GDP; a country can appear in the
+          population ranking when its GDP is unavailable. Changing the metric
+          starts with a dynamic national ranking, while the fixed cohort option
+          follows countries selected by recent nominal GDP.
+        </p>
       </section>
       <section>
         <h2>The long view: Maddison Project</h2>
@@ -84,6 +92,8 @@ export default function Methodology() {
           capita and population are available: GDP per capita × population (in
           thousands) × 1,000. The derived total is not a separate reported
           nominal GDP series.
+          Population is displayed as people after multiplying the workbook’s
+          thousands of persons by 1,000.
         </p>
         <p>
           All historical observations are labelled historical estimates. Source
@@ -131,6 +141,10 @@ export default function Methodology() {
             NY.GDP.PCAP.CD
           </a>{" "}
           (GDP per capita, current US dollars), and{" "}
+          <a href="https://data.worldbank.org/indicator/SP.POP.TOTL">
+            SP.POP.TOTL
+          </a>{" "}
+          (total population, people), and{" "}
           <a href="https://data.worldbank.org/indicator/NY.GDP.MKTP.KD.ZG">
             NY.GDP.MKTP.KD.ZG
           </a>{" "}
@@ -143,12 +157,13 @@ export default function Methodology() {
       <section>
         <h2>The outlook: IMF</h2>
         <p>
-          The October 2026 WEO workbook supplies NGDPD, NGDPDPC and NGDP_RPCH.
-          GDP in billions is converted to dollars. Actual status comes from each
+          The October 2026 WEO workbook supplies NGDPD, NGDPDPC, NGDP_RPCH and
+          LP (population). GDP in billions is converted to dollars; LP in
+          millions is converted to people. Actual status comes from each
           series’ LATEST_ACTUAL_ANNUAL_DATA field. Later observations through
           the publication year are labelled estimates; subsequent years are
           projections. Status can differ between GDP, per capita GDP, and
-          growth. IMF staff estimates are not observed outcomes. Future updates
+          growth and population. IMF staff estimates are not observed outcomes. Future updates
           require verifying and pinning a new release workbook.
         </p>
         <p>
@@ -174,8 +189,9 @@ export default function Methodology() {
         </p>
         <p>
           Dynamic rankings use available national observations in the selected
-          year. “All available” and the leaderboard also include separately
-          reported territories. We exclude World Bank regional aggregates. Ranks
+          year. Population rankings always use national economies; in GDP modes,
+          “All available” and the leaderboard also include separately reported
+          territories. We exclude World Bank regional aggregates. Ranks
           compare one year, metric and source only. No carry-forward is used;
           missing countries are omitted. Rank changes may reflect coverage
           changes as well as output. Latest rankings use the dataset’s latest

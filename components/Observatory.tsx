@@ -29,6 +29,10 @@ import manifest from "@/data/processed/manifest.json";
 
 import {
   compact,
+  formatMetric,
+  metricLabel,
+  metricStatus,
+  metricUnit,
   csv,
   ranked,
   type Mode,
@@ -123,11 +127,12 @@ export default function Observatory({
             ? 2026
             : manifest.cohortYear,
     );
-    if (q.get("metric") === "pc") setMetric("pc");
+    if (q.get("metric") === "pc" || q.get("metric") === "pop")
+      setMetric(q.get("metric") as Metric);
     const c = q.get("cohort");
     if (c && ["10", "20", "30", "100", "all", "selected"].includes(c))
       setCohort(c);
-    setDynamicCohort(q.get("dynamic") === "1");
+    setDynamicCohort(q.get("dynamic") === "1" || (q.get("metric") === "pop" && !q.has("dynamic")));
     const parse = (key: string) =>
       q
         .get(key)
@@ -239,7 +244,7 @@ export default function Observatory({
   }, [mode]);
 
   const ranking = useMemo(
-    () => (dataset ? ranked(dataset.rows, year, metric) : []),
+    () => (dataset ? ranked(dataset.rows, year, metric).filter((r) => metric !== "pop" || countryMap.get(r.code)?.national) : []),
     [dataset, year, metric],
   );
 
@@ -312,7 +317,7 @@ export default function Observatory({
     : null;
   const dLatest =
     dataset && detail
-      ? dataset.rows.filter((r) => r.code === detail && r.gdp !== null).at(-1)
+      ? dataset.rows.filter((r) => r.code === detail && r[metric] !== null).at(-1)
       : null;
 
   const pageTitle =
@@ -494,10 +499,12 @@ export default function Observatory({
             <h2>
               {metric === "gdp"
                 ? "The engines of the world economy"
-                : "Prosperity, per person"}
+                : metric === "pc"
+                  ? "Prosperity, per person"
+                  : "The world's population, ranked"}
             </h2>
             <p>
-              {info.unit} <span>·</span>{" "}
+              {metricUnit(metric, info.unit)} <span>·</span>{" "}
               {mode === "historical"
                 ? "Historical estimates"
                 : mode === "outlook"
@@ -520,6 +527,16 @@ export default function Observatory({
               onClick={() => setMetric("pc")}
             >
               Per capita
+            </button>
+            <button
+              aria-pressed={metric === "pop"}
+              className={metric === "pop" ? "active" : ""}
+              onClick={() => {
+                setMetric("pop");
+                setDynamicCohort(true);
+              }}
+            >
+              Population
             </button>
           </div>
         </div>
@@ -547,7 +564,7 @@ export default function Observatory({
               onChange={(e) => setDynamicCohort(e.target.value === "dynamic")}
             >
               <option value="fixed">
-                Today’s Top {cohort === "100" ? "100" : "30"}, tracked
+                GDP Top {cohort === "100" ? "100" : "30"}, tracked
                 historically
               </option>
               <option value="dynamic">
@@ -632,7 +649,7 @@ export default function Observatory({
                   setDetail(code);
                 }}
                 duration={reduced ? 0 : Math.min(750, 1200 / speed)}
-                unit={info.unit}
+                unit={metricUnit(metric, info.unit)}
                 source={info.source}
               />
               <p className="chart-hint">
@@ -645,12 +662,14 @@ export default function Observatory({
               <Flag country={focusedCountry} />
               <h3>{focusedCountry.name}</h3>
               <p className="focus-value">
-                {compact(focusedObservation?.[metric])}
+                {formatMetric(focusedObservation?.[metric], metric)}
               </p>
               <p className="muted">
                 {metric === "gdp"
                   ? "Total economic output"
-                  : "Output per person"}{" "}
+                  : metric === "pc"
+                    ? "Output per person"
+                    : "People"}{" "}
                 · {year}
               </p>
               <div className="focus-rank">
@@ -672,7 +691,9 @@ export default function Observatory({
               <div className="aside-note">
                 <Info size={15} />
                 <p>
-                  {mode === "modern"
+                  {metric === "pop"
+                    ? "Population uses source-reported counts. Historical estimates and IMF projections have different certainty; country boundaries can change."
+                    : mode === "modern"
                     ? "Nominal GDP reflects both economic output and exchange rates. It is not adjusted for inflation."
                     : mode === "historical"
                       ? "Historical estimates use purchasing power parity. Modern flags identify series, not historical sovereignty."
@@ -823,11 +844,13 @@ export default function Observatory({
         </div>
         <p className="coverage-note">
           {cohort === "all"
-            ? "All available economies, including separately reported territories."
+            ? metric === "pop"
+              ? "All available national economies with population observations."
+              : "All available economies, including separately reported territories."
             : dynamicCohort
               ? "Ranks reflect national economies with observations in the selected year."
               : `Fixed cohort based on ${manifest.cohortYear} World Bank nominal GDP. Missing observations are omitted, never filled.`}{" "}
-          {mode === "historical"
+          {mode === "historical" && metric !== "pop"
             ? "Historical series follow source boundary conventions; former aggregate states are excluded. Dollar symbols here denote international dollars."
             : ""}
         </p>
@@ -928,24 +951,20 @@ export default function Observatory({
                       {c.name}
                     </span>
                     <strong>
-                      {compact(first?.[metric])}
+                      {formatMetric(first?.[metric], metric)}
                       <ChevronRight size={13} />
-                      {compact(last?.[metric])}
+                      {formatMetric(last?.[metric], metric)}
                     </strong>
                     <small>
                       {first?.year ?? "No coverage"} — {last?.year ?? "—"} ·{" "}
-                      {last
-                        ? metric === "pc"
-                          ? (last.pcStatus ?? last.status)
-                          : last.status
-                        : "unavailable"}
+                      {last ? metricStatus(last, metric) : "unavailable"}
                     </small>
                   </div>
                 );
               })}
             </div>
             <p className="source-note">
-              {dataset.source} · {dataset.unit}. Gaps are left unconnected.
+              {dataset.source} · {metricUnit(metric, dataset.unit)}. Gaps are left unconnected.
               Endpoints use each country’s first and last available observation;
               dates can differ. Toggle series in the chart legend.
             </p>
@@ -1029,16 +1048,16 @@ export default function Observatory({
               <div>
                 <small>GDP / {year}</small>
                 <strong>{compact(dr?.gdp)}</strong>
-                <span>{dr?.status ?? "Unavailable"}</span>
+                <span>{dr?.gdp == null ? "Unavailable" : dr.status}</span>
               </div>
               <div>
                 <small>GDP per capita / {year}</small>
                 <strong>{compact(dr?.pc)}</strong>
-                <span>{dr?.pcStatus ?? dr?.status ?? "Unavailable"}</span>
+                <span>{dr?.pc == null ? "Unavailable" : (dr.pcStatus ?? dr.status)}</span>
               </div>
               <div>
                 <small>
-                  Ranking / {metric === "gdp" ? "GDP" : "per capita"}
+                  Ranking / {metricLabel(metric)}
                 </small>
                 <strong>
                   {ranking.some((r) => r.code === dc.code)
@@ -1046,6 +1065,11 @@ export default function Observatory({
                     : "—"}
                 </strong>
                 <span>Available economies</span>
+              </div>
+              <div>
+                <small>Population / {year}</small>
+                <strong>{formatMetric(dr?.pop, "pop")}</strong>
+                <span>{dr?.pop == null ? "Unavailable" : metricStatus(dr, "pop")}</span>
               </div>
               <div>
                 <small>Real GDP growth</small>
@@ -1060,8 +1084,8 @@ export default function Observatory({
               </div>
             </div>
             <p className="source-note">
-              Latest available in this dataset: {dLatest?.year ?? "—"} · GDP{" "}
-              {compact(dLatest?.gdp)} · Per capita {compact(dLatest?.pc)} ·{" "}
+              Latest available {metricLabel(metric)} in this dataset: {dLatest?.year ?? "—"} · GDP{" "}
+              {compact(dLatest?.gdp)} · Per capita {compact(dLatest?.pc)} · Population {formatMetric(dLatest?.pop, "pop")} ·{" "}
               {dLatest?.status ?? "unavailable"}.
             </p>
             <div className="detail-actions">
@@ -1100,6 +1124,8 @@ export default function Observatory({
             <TrendChart dataset={dataset} countries={[dc]} metric="gdp" />
             <h3>GDP per capita over time</h3>
             <TrendChart dataset={dataset} countries={[dc]} metric="pc" />
+            <h3>Population over time</h3>
+            <TrendChart dataset={dataset} countries={[dc]} metric="pop" />
             <p className="source-note">
               {dataset.source} · {dataset.version}. Status is assigned per
               indicator; forecasts remain separate from World Bank and
