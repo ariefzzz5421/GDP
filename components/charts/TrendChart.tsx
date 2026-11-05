@@ -22,6 +22,9 @@ import { CanvasRenderer } from "echarts/renderers";
 
 import {
   compact,
+  formatMetric,
+  metricStatus,
+  metricUnit,
   ranked,
   type Country,
   type Dataset,
@@ -104,7 +107,7 @@ export default function TrendChart({
           const year = Number(list[0].axisValue);
           const ranks = ranked(dataset.rows, year, metric);
           return (
-            `<b>${year} · ${dataset.unit}</b><br/>` +
+            `<b>${year} · ${metricUnit(metric, dataset.unit)}</b><br/>` +
             list
               .map((p) => {
                 const country = countries[p.seriesIndex];
@@ -118,7 +121,7 @@ export default function TrendChart({
                 if (!r) return `${flag}${name}: unavailable`;
                 const rank =
                   ranks.findIndex((x) => x.code === country.code) + 1;
-                return `${flag}${name} · #${rank || "—"}<br/>GDP: ${compact(r.gdp)} · Per capita: ${compact(r.pc)}<br/>${metric === "pc" ? (r.pcStatus ?? r.status) : r.status}`;
+                return `${flag}${name} · #${rank || "—"}<br/>GDP: ${compact(r.gdp)} · Per capita: ${compact(r.pc)}<br/>Population: ${formatMetric(r.pop, "pop")} people<br/>${metricStatus(r, metric)}`;
               })
               .join("<br/><br/>") +
             `<br/><small>${dataset.source}</small>`
@@ -135,7 +138,7 @@ export default function TrendChart({
       yAxis: {
         type: "value",
         splitLine: { lineStyle: { color: "#202b3a", type: "dashed" } },
-        axisLabel: { color: "#8491a4", formatter: (v: number) => compact(v) },
+        axisLabel: { color: "#8491a4", formatter: (v: number) => formatMetric(v, metric) },
       },
       dataZoom: [
         { type: "inside", start: 0, end: 100 },
@@ -171,7 +174,7 @@ export default function TrendChart({
       ref={el}
       className="trend-chart"
       role="img"
-      aria-label={`${metric === "gdp" ? "GDP" : "GDP per capita"} comparison for ${countries.map((c) => c.name).join(", ")}. Use the data table and CSV for accessible values.`}
+      aria-label={`${metric === "gdp" ? "GDP" : metric === "pc" ? "GDP per capita" : "Population"} comparison for ${countries.map((c) => c.name).join(", ")}. Use the data table and CSV for accessible values.`}
     />
   );
 }

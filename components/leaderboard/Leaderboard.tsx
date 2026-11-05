@@ -3,6 +3,9 @@ import { useState } from "react";
 import Flag from "@/components/Flag";
 import {
   compact,
+  formatMetric,
+  metricLabel,
+  metricUnit,
   ranked,
   type Country,
   type Dataset,
@@ -28,14 +31,15 @@ export default function Leaderboard({
   highlight: string;
 }) {
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<"rank" | "name" | "gdp" | "pc" | "growth">(
+  const [sort, setSort] = useState<"rank" | "name" | "gdp" | "pc" | "pop" | "growth">(
     "rank",
   );
   const [asc, setAsc] = useState(true);
   const [limit, setLimit] = useState(20);
-  const ranking = ranked(dataset.rows, year, metric);
-  const previous = ranked(dataset.rows, year - 1, metric);
   const names = new Map(countries.map((c) => [c.code, c]));
+  const eligible = (r: Observation) => metric !== "pop" || names.get(r.code)?.national;
+  const ranking = ranked(dataset.rows, year, metric).filter(eligible);
+  const previous = ranked(dataset.rows, year - 1, metric).filter(eligible);
   const rows = ranking
     .map((r, i) => ({ ...r, rank: i + 1, country: names.get(r.code)! }))
     .filter(
@@ -63,7 +67,7 @@ export default function Leaderboard({
   const full = (r: Observation, k: Metric) =>
     r[k] === null
       ? "Unavailable"
-      : `${r[k]!.toLocaleString("en-US", { maximumFractionDigits: 4 })} ${dataset.unit}`;
+      : `${r[k]!.toLocaleString("en-US", { maximumFractionDigits: 4 })} ${metricUnit(k, dataset.unit)}`;
   return (
     <section className="leaderboard section-anchor" id="rankings">
       <div className="section-heading">
@@ -79,7 +83,7 @@ export default function Leaderboard({
               dataset.mode === "modern"
                 ? Math.max(
                     ...dataset.rows
-                      .filter((r) => r.gdp !== null)
+                      .filter((r) => r[metric] !== null)
                       .map((r) => r.year),
                   )
                 : dataset.maxYear;
@@ -104,8 +108,8 @@ export default function Leaderboard({
         </label>
         <p>
           {ranking.length} economies with{" "}
-          {metric === "gdp" ? "GDP" : "per capita"} data · Same-year
-          observations
+          {metricLabel(metric)} data · Same-year
+          {metric === "pop" ? " national observations" : " observations"}
         </p>
         <label>
           Year{" "}
@@ -133,6 +137,7 @@ export default function Leaderboard({
                   ["name", "Economy"],
                   ["gdp", "Total GDP"],
                   ["pc", "GDP per capita"],
+                  ["pop", "Population"],
                   ["growth", "Real GDP growth"],
                 ] as const
               ).map(([key, label]) => (
@@ -175,6 +180,7 @@ export default function Leaderboard({
                   </td>
                   <td title={full(r, "gdp")}>{compact(r.gdp)}</td>
                   <td title={full(r, "pc")}>{compact(r.pc)}</td>
+                  <td title={full(r, "pop")}>{formatMetric(r.pop, "pop")}</td>
                   <td className={(r.growth ?? 0) > 0 ? "positive" : ""}>
                     {r.growth === null
                       ? "—"
@@ -207,9 +213,9 @@ export default function Leaderboard({
         </button>
       )}
       <p className="source-note">
-        {dataset.source} · {dataset.version} · {dataset.unit}. Growth is real
+        {dataset.source} · {dataset.version} · {metricUnit(metric, dataset.unit)}. Growth is real
         annual GDP growth where reported. Rank changes reflect available
-        coverage, not a fixed universe.{" "}
+        coverage, not a fixed universe. Population rankings include national economies only.{" "}
         {dataset.mode === "outlook"
           ? "IMF actuals, estimates and forecasts; inspect country detail for status."
           : ""}

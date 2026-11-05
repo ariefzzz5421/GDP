@@ -40,7 +40,7 @@ valid={c['code'] for c in countries}; national={c['code'] for c in countries if 
 
 modern={}
 
-for metric in ['gdp','pc','growth']:
+for metric in ['gdp','pc','pop','growth']:
 
  for r in read(f'wb-{metric}.json')[1]:
 
@@ -48,15 +48,15 @@ for metric in ['gdp','pc','growth']:
 
   if code not in valid or v is None:continue
 
-  key=(code,y);modern.setdefault(key,{'code':code,'year':y,'gdp':None,'pc':None,'growth':None,'status':'actual'})[metric]=v
+  key=(code,y);modern.setdefault(key,{'code':code,'year':y,'gdp':None,'pc':None,'pop':None,'growth':None,'status':'actual'})[metric]=v
 
 wb=read('wb-gdp.json')[0]
 
 def dataset(mode,rows,source,version,unit,file,url,license):
 
- rows=sorted([r for r in rows if r['gdp'] is not None or r['pc'] is not None],key=lambda r:(r['year'],r['code']))
+ rows=sorted([r for r in rows if r['gdp'] is not None or r['pc'] is not None or r['pop'] is not None],key=lambda r:(r['year'],r['code']))
 
- assert len(rows)>100 and all(r['gdp'] is None or r['gdp']>=0 for r in rows)
+ assert len(rows)>100 and all((r['gdp'] is None or r['gdp']>=0) and (r['pop'] is None or r['pop']>=0) for r in rows)
 
  return dict(mode=mode,source=source,version=version,unit=unit,retrievedAt=meta(file),sourceUrl=url,license=license,minYear=min(r['year'] for r in rows),maxYear=max(r['year'] for r in rows),rows=rows)
 
@@ -74,9 +74,9 @@ for code,name,region,year,pc,pop in list(w['Full data'].values)[1:]:
 
  pc=number(pc);pop=number(pop)
 
- if pc is None:continue
+ if pc is None and pop is None:continue
 
- history.append(dict(code=code,year=year,pc=pc,gdp=round(pc*pop*1000,2) if pop is not None else None,growth=None,status='historical estimate'))
+ history.append(dict(code=code,year=year,pc=pc,pop=pop*1000 if pop is not None else None,gdp=round(pc*pop*1000,2) if pc is not None and pop is not None else None,growth=None,status='historical estimate'))
 
 historical=dataset('historical',history,'Maddison Project Database','MPD 2023 · Bolt & van Zanden (2024)','2011 international dollars (PPP)','maddison.xlsx','https://doi.org/10.34894/INZBF2','CC BY 4.0')
 
@@ -98,9 +98,9 @@ for raw in it:
 
  r=dict(zip(header,raw));code=r['COUNTRY.ID'];ind=r['INDICATOR.ID']
 
- if code not in valid or ind not in ['NGDPD','NGDPDPC','NGDP_RPCH']:continue
+ if code not in valid or ind not in ['NGDPD','NGDPDPC','NGDP_RPCH','LP']:continue
 
- metric={'NGDPD':'gdp','NGDPDPC':'pc','NGDP_RPCH':'growth'}[ind];last=number(r['LATEST_ACTUAL_ANNUAL_DATA']) or 0
+ metric={'NGDPD':'gdp','NGDPDPC':'pc','NGDP_RPCH':'growth','LP':'pop'}[ind];last=number(r['LATEST_ACTUAL_ANNUAL_DATA']) or 0
 
  for year in range(1980,2032):
 
@@ -109,12 +109,13 @@ for raw in it:
   if v is None:continue
 
   if metric=='gdp':v*=1e9
+  if metric=='pop':v*=1e6
 
   status='actual' if year<=last else ('projection' if year>2026 else 'estimate')
 
-  row=outlook.setdefault((code,year),dict(code=code,year=year,gdp=None,pc=None,growth=None,status='estimate'))
+  row=outlook.setdefault((code,year),dict(code=code,year=year,gdp=None,pc=None,pop=None,growth=None,status='estimate'))
 
-  row[metric]=v;row[{'gdp':'status','pc':'pcStatus','growth':'growthStatus'}[metric]]=status
+  row[metric]=v;row[{'gdp':'status','pc':'pcStatus','growth':'growthStatus','pop':'popStatus'}[metric]]=status
 
 outlook=dataset('outlook',outlook.values(),'International Monetary Fund · WEO','October 2026 WEO','current US dollars','imf-weo.xlsx','https://data.imf.org/datasets/WEO','IMF terms of use')
 

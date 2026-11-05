@@ -1,7 +1,8 @@
 import { countryColor } from "@/components/charts/RaceChart";
 
 import {
-  compact,
+  formatMetric,
+  metricUnit,
   type Observation,
   type Country,
   type Dataset,
@@ -35,13 +36,13 @@ export async function exportRace(
   ctx.fillStyle = "#f0f5fa";
   ctx.font = "bold 38px sans-serif";
   ctx.fillText(
-    `GDP.  ${metric === "gdp" ? "Economic power" : "Prosperity per person"} / ${year}`,
+    `GDP.  ${metric === "gdp" ? "Economic power" : metric === "pc" ? "Prosperity per person" : "Population of the world"} / ${year}`,
     45,
     65,
   );
   ctx.font = "18px sans-serif";
   ctx.fillStyle = "#a4b2c5";
-  ctx.fillText(`${dataset.source} · ${dataset.unit}`, 45, 103);
+  ctx.fillText(`${dataset.source} · ${metricUnit(metric, dataset.unit)}`, 45, 103);
   const max = rows[0]?.[metric] ?? 1;
 
   for (let i = 0; i < rows.length; i++) {
@@ -64,7 +65,7 @@ export async function exportRace(
     const width = ((r[metric] ?? 0) / max) * 970;
     ctx.fillRect(370, y, width, 30);
     ctx.fillStyle = "#edf6fa";
-    ctx.fillText(compact(r[metric]), 385 + width, y + 23);
+    ctx.fillText(formatMetric(r[metric], metric), 385 + width, y + 23);
   }
 
   ctx.fillStyle = "#8fa0b3";

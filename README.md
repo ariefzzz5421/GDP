@@ -24,7 +24,7 @@ Open http://localhost:3000. No database, API key or runtime environment variable
 - `/country/idn`: country profile; ISO alpha-3 country routes are prerendered.
 - `/methodology`: definitions, attribution, boundaries, units, data status and refresh policy.
 
-Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita, fixed Top 10/20/30/100 or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Motion honors reduced-motion preferences. Snapshot failures offer retry.
+Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita/population, fixed Top 10/20/30/100 or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Population starts with dynamic national rankings so Top 10/20/30/100 shows the most populous countries for the chosen year. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Motion honors reduced-motion preferences. Snapshot failures offer retry.
 
 ## Data — definitions are deliberately separate
 
@@ -34,9 +34,9 @@ Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider,
 | Historical | Maddison Project Database 2023 | 1900–2022 | Constant 2011 international dollars, PPP |
 | Outlook | IMF October 2026 WEO workbook | 1980–2031 | Current US dollars |
 
-There are 11,764 modern, 14,329 historical and 9,297 IMF country-year records in the initial snapshot. Coverage varies by country and indicator. No application-generated interpolation, backfill or invented GDP values is used.
+The refresh creates source-backed country-year records; coverage varies by country and indicator. No application-generated interpolation, backfill or invented values are used.
 
-World Bank indicators: `NY.GDP.MKTP.CD`, `NY.GDP.PCAP.CD`, `NY.GDP.MKTP.KD.ZG`. World Bank reported history is labelled actual, subject to revision and underlying national statistical estimation. Maddison values are historical estimates; total GDP is derived as GDP per capita × population **in thousands × 1,000**. IMF `NGDPD` billions are converted to dollars. IMF `LATEST_ACTUAL_ANNUAL_DATA` is read **per indicator**, not inferred from a universal year: observations up to that boundary are actual; later observations through 2026 are estimates, and 2027 onward are projections.
+World Bank indicators: `NY.GDP.MKTP.CD`, `NY.GDP.PCAP.CD`, `SP.POP.TOTL`, `NY.GDP.MKTP.KD.ZG`. Population is stored in people. World Bank reported history is labelled actual, subject to revision and underlying national statistical estimation. Maddison values are historical estimates; total GDP is derived as GDP per capita × population **in thousands × 1,000**, while population is converted to people. IMF `NGDPD` billions are converted to dollars and `LP` millions are converted to people. IMF `LATEST_ACTUAL_ANNUAL_DATA` is read **per indicator**, not inferred from a universal year: observations up to that boundary are actual; later observations through 2026 are estimates, and 2027 onward are projections.
 
 The default national cohort is the top 30 by 2025 World Bank nominal GDP, including Indonesia. Top 100 uses a separately stored 100-country cohort from the same year. The cohort reference year is the latest year with at least 150 national observations. Dynamic national rankings and all-available economy rankings are different universes. The leaderboard includes separately reported territories and excludes regional aggregates. Rankings never combine years or datasets. Missing values remain missing.
 
@@ -87,7 +87,7 @@ After Vercel reports READY, verify the homepage, a country route, methodology, a
 
 ## Attribution
 
-- [World Bank WDI](https://data.worldbank.org/indicator/NY.GDP.MKTP.CD), CC BY 4.0 subject to source exceptions.
+- [World Bank WDI](https://data.worldbank.org/indicator/NY.GDP.MKTP.CD) and [population indicator](https://data.worldbank.org/indicator/SP.POP.TOTL), CC BY 4.0 subject to source exceptions.
 - [Maddison Project Database 2023](https://doi.org/10.34894/INZBF2), CC BY 4.0. Bolt, Jutta and Jan Luiten van Zanden (2024), “Maddison style estimates of the evolution of the world economy: A new 2023 update”, Journal of Economic Surveys. [Paper](https://doi.org/10.1111/joes.12618). Original country papers are extracted into `public/data/historical-sources.json`, surfaced in historical country details and linked from methodology. Consult the complete workbook bibliography for reuse.
 - [IMF World Economic Outlook](https://data.imf.org/datasets/WEO), October 2026; [terms of use](https://www.imf.org/external/terms.htm).
 - [flag-icons](https://github.com/lipis/flag-icons), MIT. License retained in `public/flags/LICENSE`.
