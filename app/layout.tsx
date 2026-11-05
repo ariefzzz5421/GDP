@@ -1,6 +1,8 @@
 import { Inter, Oswald } from "next/font/google";
 import Link from "next/link";
-import { Globe2, ArrowUpRight } from "lucide-react";
+import { Globe2 } from "lucide-react";
+import SiteNav from "@/components/SiteNav";
+import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const oswald = Oswald({
@@ -19,7 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{const saved=localStorage.getItem('gdp-theme');document.documentElement.dataset.theme=saved==='light'||saved==='dark'?saved:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch{document.documentElement.dataset.theme='dark'}`,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${oswald.variable}`}>
         <a className="skip" href="#main">
           Skip to content
@@ -37,18 +46,13 @@ export default function RootLayout({
                 OBSERVATORY
               </span>
             </Link>
-            <nav aria-label="Main navigation">
-              <Link href="/">Observatory</Link>
-              <Link href="/history">History</Link>
-              <Link href="/compare">Compare</Link>
-              <Link href="/rankings">Rankings</Link>
-              <Link href="/methodology">
-                Methodology <ArrowUpRight size={12} />
-              </Link>
-            </nav>
-            <span className="nav-note">
-              <i /> OPEN DATA. OPEN PERSPECTIVES.
-            </span>
+            <SiteNav />
+            <div className="header-actions">
+              <ThemeToggle />
+              <span className="nav-note">
+                <i /> OPEN DATA. OPEN PERSPECTIVES.
+              </span>
+            </div>
           </div>
         </header>
         {children}

@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="13" fill="#0a1019"/><path d="M14 46V30h8v16zm14 0V22h8v24zm14 0V13h8v33z" fill="#58caf0"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="GDP globe logo">
+  <rect width="128" height="128" rx="25" fill="#0a1019"/>
+  <g transform="translate(28 12) scale(3)" fill="none" stroke="#58caf0" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"/>
+    <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"/>
+    <path d="M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05"/>
+    <circle cx="12" cy="12" r="10"/>
+  </g>
+  <text x="62" y="113" text-anchor="middle" fill="#f4f7fc" font-family="Impact,Arial Narrow,sans-serif" font-size="30" font-weight="900" letter-spacing="-1">GDP</text>
+  <circle cx="102" cy="107" r="3.2" fill="#58caf0"/>
+</svg>

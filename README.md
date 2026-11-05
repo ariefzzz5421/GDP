@@ -24,7 +24,7 @@ Open http://localhost:3000. No database, API key or runtime environment variable
 - `/country/idn`: country profile; ISO alpha-3 country routes are prerendered.
 - `/methodology`: definitions, attribution, boundaries, units, data status and refresh policy.
 
-Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita/population, fixed Top 10/20/30/100 or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Population starts with dynamic national rankings so Top 10/20/30/100 shows the most populous countries for the chosen year. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Motion honors reduced-motion preferences. Snapshot failures offer retry.
+Controls include play/pause/restart/previous/next, 0.5–4× speed, year slider, GDP/per-capita/population, fixed Top 10/20/30/100 or dynamic national cohorts, custom selections, event annotations, local CSV and PNG exports, and shareable URL state. Population starts with dynamic national rankings so Top 10/20/30/100 shows the most populous countries for the chosen year. The hero globe uses local NASA imagery and can be rotated by dragging or arrow keys; automatic rotation pauses off screen and follows reduced-motion settings. The header offers a saved light/dark preference. Long charts have a bounded scroll area; tables scroll horizontally on narrow screens. Country details use a keyboard-dismissable native dialog. Snapshot failures offer retry.
 
 ## Data — definitions are deliberately separate
 
@@ -91,6 +91,7 @@ After Vercel reports READY, verify the homepage, a country route, methodology, a
 - [Maddison Project Database 2023](https://doi.org/10.34894/INZBF2), CC BY 4.0. Bolt, Jutta and Jan Luiten van Zanden (2024), “Maddison style estimates of the evolution of the world economy: A new 2023 update”, Journal of Economic Surveys. [Paper](https://doi.org/10.1111/joes.12618). Original country papers are extracted into `public/data/historical-sources.json`, surfaced in historical country details and linked from methodology. Consult the complete workbook bibliography for reuse.
 - [IMF World Economic Outlook](https://data.imf.org/datasets/WEO), October 2026; [terms of use](https://www.imf.org/external/terms.htm).
 - [flag-icons](https://github.com/lipis/flag-icons), MIT. License retained in `public/flags/LICENSE`.
+- [NASA/Goddard Space Flight Center Scientific Visualization Studio, Blue Marble](https://svs.gsfc.nasa.gov/2915) for the local globe texture. Blue Marble Next Generation data courtesy of Reto Stockli (NASA/GSFC) and NASA Earth Observatory.
 - Event references are stored alongside factual annotations in `lib/data/events.ts`; annotations supply context, not causal claims.
 
 Application code is licensed under the repository MIT license. Dataset rights remain with their respective sources.

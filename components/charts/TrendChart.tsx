@@ -41,6 +41,22 @@ registerECharts([
 ]);
 
 const colors = ["#4bc9f1", "#f6bd6b", "#b6a1ff", "#f4828f", "#6ed5b2"];
+const lightColors = ["#087eaa", "#a35c08", "#7751a8", "#ae4064", "#087d63"];
+
+function chartTheme() {
+  const light = document.documentElement.dataset.theme === "light";
+  return {
+    colors: light ? lightColors : colors,
+    text: light ? "#465e70" : "#aeb8c8",
+    axis: light ? "#5d7182" : "#8491a4",
+    border: light ? "#bbccd8" : "#2c3644",
+    grid: light ? "#d9e4eb" : "#202b3a",
+    tooltip: light ? "#ffffff" : "#111c2b",
+    tooltipText: light ? "#1a3043" : "#eef5ff",
+    slider: light ? "#e2eef3" : "#182f46",
+    filler: light ? "#087eaa25" : "#42c9ee22",
+  };
+}
 
 export default function TrendChart({
   dataset,
@@ -76,10 +92,11 @@ export default function TrendChart({
       (_, i) => dataset.minYear + i,
     );
     const index = new Map(dataset.rows.map((r) => [`${r.code}-${r.year}`, r]));
+    const visual = chartTheme();
 
     const option: EChartsCoreOption = {
       backgroundColor: "transparent",
-      color: colors,
+      color: visual.colors,
       animationDuration: 350,
       animation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
       grid: {
@@ -90,13 +107,13 @@ export default function TrendChart({
         outerBoundsMode: "same",
         outerBoundsContain: "axisLabel",
       },
-      legend: { show: true, textStyle: { color: "#aeb8c8" }, top: 0 },
+      legend: { show: true, textStyle: { color: visual.text }, top: 0 },
       tooltip: {
         trigger: "axis",
         confine: true,
-        backgroundColor: "#111c2b",
-        borderColor: "#344258",
-        textStyle: { color: "#eef5ff" },
+        backgroundColor: visual.tooltip,
+        borderColor: visual.border,
+        textStyle: { color: visual.tooltipText },
         formatter: (params: unknown) => {
           const list = params as {
             axisValue: string;
@@ -132,13 +149,13 @@ export default function TrendChart({
         type: "category",
         data: years,
         boundaryGap: false,
-        axisLine: { lineStyle: { color: "#2c3644" } },
-        axisLabel: { color: "#8491a4" },
+        axisLine: { lineStyle: { color: visual.border } },
+        axisLabel: { color: visual.axis },
       },
       yAxis: {
         type: "value",
-        splitLine: { lineStyle: { color: "#202b3a", type: "dashed" } },
-        axisLabel: { color: "#8491a4", formatter: (v: number) => formatMetric(v, metric) },
+        splitLine: { lineStyle: { color: visual.grid, type: "dashed" } },
+        axisLabel: { color: visual.axis, formatter: (v: number) => formatMetric(v, metric) },
       },
       dataZoom: [
         { type: "inside", start: 0, end: 100 },
@@ -146,28 +163,46 @@ export default function TrendChart({
           type: "slider",
           bottom: 10,
           height: 22,
-          borderColor: "#263245",
-          textStyle: { color: "#8795a8" },
-          fillerColor: "#42c9ee22",
-          handleStyle: { color: "#56c8e8" },
+          borderColor: visual.border,
+          textStyle: { color: visual.axis },
+          fillerColor: visual.filler,
+          handleStyle: { color: visual.colors[0] },
           dataBackground: {
-            lineStyle: { color: "#456075" },
-            areaStyle: { color: "#182f46" },
+            lineStyle: { color: visual.axis },
+            areaStyle: { color: visual.slider },
           },
         },
       ],
-      series: countries.map((c) => ({
+      series: countries.map((c, i) => ({
         name: c.name,
         type: "line",
         showSymbol: false,
         connectNulls: false,
-        lineStyle: { width: c.code === "IDN" ? 3 : 2 },
+        lineStyle: { width: c.code === "IDN" ? 3 : 2, color: visual.colors[i % visual.colors.length] },
+        itemStyle: { color: visual.colors[i % visual.colors.length] },
         emphasis: { focus: "series" },
         data: years.map((y) => index.get(`${c.code}-${y}`)?.[metric] ?? null),
       })),
     };
     chart.current.setOption(option, true);
   }, [dataset, countries, metric, resetKey]);
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const visual = chartTheme();
+      chart.current?.setOption({
+        color: visual.colors,
+        legend: { textStyle: { color: visual.text } },
+        tooltip: { backgroundColor: visual.tooltip, borderColor: visual.border, textStyle: { color: visual.tooltipText } },
+        xAxis: { axisLine: { lineStyle: { color: visual.border } }, axisLabel: { color: visual.axis } },
+        yAxis: { splitLine: { lineStyle: { color: visual.grid } }, axisLabel: { color: visual.axis } },
+        dataZoom: [{}, { borderColor: visual.border, textStyle: { color: visual.axis }, fillerColor: visual.filler, handleStyle: { color: visual.colors[0] }, dataBackground: { lineStyle: { color: visual.axis }, areaStyle: { color: visual.slider } } }],
+        series: countries.map((country, i) => ({ name: country.name, lineStyle: { color: visual.colors[i % visual.colors.length] }, itemStyle: { color: visual.colors[i % visual.colors.length] } })),
+      });
+    };
+    window.addEventListener("gdp-theme-change", updateTheme);
+    return () => window.removeEventListener("gdp-theme-change", updateTheme);
+  }, [countries]);
 
   return (
     <div

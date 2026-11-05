@@ -21,9 +21,9 @@ import {
   Check,
   Focus,
   ChevronRight,
-  Globe2,
   TrendingUp,
 } from "lucide-react";
+import HeroGlobe from "@/components/HeroGlobe";
 
 import manifest from "@/data/processed/manifest.json";
 
@@ -350,9 +350,7 @@ export default function Observatory({
           </p>
         </div>
         <div className="hero-aside">
-          <div className="orb" aria-hidden="true">
-            <Globe2 strokeWidth={0.45} />
-          </div>
+          <HeroGlobe />
           <div className="hero-index">
             <span>1900 — TODAY</span>
             <p>
@@ -360,6 +358,9 @@ export default function Observatory({
               <br />A clearer perspective.
             </p>
             <a href="#explorer">EXPLORE THE DATA ↓</a>
+            <small className="globe-hint">
+              DRAG TO ROTATE · <a href="https://svs.gsfc.nasa.gov/2915" target="_blank" rel="noreferrer">NASA BLUE MARBLE ↗</a>
+            </small>
           </div>
         </div>
       </section>
