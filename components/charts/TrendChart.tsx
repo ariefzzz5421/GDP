@@ -109,10 +109,16 @@ export default function TrendChart({
               .map((p) => {
                 const country = countries[p.seriesIndex];
                 const r = index.get(`${country.code}-${year}`);
-                if (!r) return `${country.name}: unavailable`;
+                const name = country.name
+                  .replaceAll("&", "&amp;")
+                  .replaceAll("<", "&lt;")
+                  .replaceAll(">", "&gt;")
+                  .replaceAll('"', "&quot;");
+                const flag = `<img src="/flags/${country.iso2.toLowerCase() === "jg" ? "xx" : country.iso2.toLowerCase()}.svg" alt="" width="22" height="16" style="vertical-align:middle;margin-right:8px;border-radius:2px"/>`;
+                if (!r) return `${flag}${name}: unavailable`;
                 const rank =
                   ranks.findIndex((x) => x.code === country.code) + 1;
-                return `${country.name} · #${rank || "—"}<br/>GDP: ${compact(r.gdp)} · Per capita: ${compact(r.pc)}<br/>${metric === "pc" ? (r.pcStatus ?? r.status) : r.status}`;
+                return `${flag}${name} · #${rank || "—"}<br/>GDP: ${compact(r.gdp)} · Per capita: ${compact(r.pc)}<br/>${metric === "pc" ? (r.pcStatus ?? r.status) : r.status}`;
               })
               .join("<br/><br/>") +
             `<br/><small>${dataset.source}</small>`

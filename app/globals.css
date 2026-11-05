@@ -437,7 +437,7 @@ button svg {
   min-height: 32px;
   padding: 5px 10px;
 }
-.indonesia-button .flag {
+.highlight-selector .flag {
   width: 16px;
 }
 .chart-toolbar .event-toggle {
@@ -1916,4 +1916,28 @@ td:nth-child(-n + 2) {
   .chart-grid {
     width: calc((100% - 120px) * 0.7);
   }
+}
+
+.highlight-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #a9b9c9;
+  font-size: 10px;
+  border: 1px solid var(--line);
+  padding: 0 8px;
+  border-radius: 4px;
+  background: #122132;
+  min-height: 36px;
+}
+.highlight-selector select {
+  border: 0;
+  background: transparent;
+  max-width: 180px;
+  padding: 5px 2px;
+  color: var(--cyan);
+}
+.highlight-selector .flag {
+  width: 19px;
+  height: 13px;
 }

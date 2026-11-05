@@ -136,7 +136,7 @@ export default function Observatory({
     const comp = parse("compare");
     if (comp) setCompare([...new Set(comp)].slice(0, 5));
     const h = q.get("highlight");
-    if (h === "" || (h && countryMap.has(h))) setHighlight(h);
+    if (h && countryMap.has(h)) setHighlight(h);
     const s = Number(q.get("speed"));
     if ([0.5, 1, 2, 4].includes(s)) setSpeed(s);
     setReady(true);
@@ -257,8 +257,12 @@ export default function Observatory({
     [compare],
   );
 
-  const indonesia = ranking.find((r) => r.code === "IDN");
-  const idnRank = ranking.findIndex((r) => r.code === "IDN") + 1;
+  const focusedCountry = countryMap.get(highlight) ?? countryMap.get("IDN")!;
+  const focusedObservation = ranking.find(
+    (r) => r.code === focusedCountry.code,
+  );
+  const focusedRank =
+    ranking.findIndex((r) => r.code === focusedCountry.code) + 1;
   const info = manifest.datasets[mode];
 
   const switchMode = (m: Mode) => {
@@ -543,21 +547,26 @@ export default function Observatory({
               </option>
             </select>
           )}
-          <button
-            className={
-              highlight === "IDN"
-                ? "indonesia-button active"
-                : "indonesia-button"
-            }
-            onClick={() => {
-              setHighlight(highlight === "IDN" ? "" : "IDN");
-              if (cohort === "selected" && !selected.includes("IDN"))
-                setSelected([...selected, "IDN"]);
-            }}
-          >
-            <Flag country={countryMap.get("IDN")!} /> Highlight Indonesia{" "}
-            <Focus size={14} />
-          </button>
+          <label className="highlight-selector">
+            <Focus size={14} /> Highlight
+            <Flag country={focusedCountry} />
+            <select
+              aria-label="Highlight country"
+              value={focusedCountry.code}
+              onChange={(e) => {
+                const code = e.target.value;
+                setHighlight(code);
+                if (cohort === "selected" && !selected.includes(code))
+                  setSelected([...selected, code]);
+              }}
+            >
+              {countries.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="event-toggle">
             <input
               type="checkbox"
@@ -636,9 +645,11 @@ export default function Observatory({
             </div>
             <aside className="chart-aside">
               <p className="eyebrow">IN FOCUS</p>
-              <Flag country={countryMap.get("IDN")!} />
-              <h3>Indonesia</h3>
-              <p className="focus-value">{compact(indonesia?.[metric])}</p>
+              <Flag country={focusedCountry} />
+              <h3>{focusedCountry.name}</h3>
+              <p className="focus-value">
+                {compact(focusedObservation?.[metric])}
+              </p>
               <p className="muted">
                 {metric === "gdp"
                   ? "Total economic output"
@@ -646,7 +657,7 @@ export default function Observatory({
                 · {year}
               </p>
               <div className="focus-rank">
-                <strong>{idnRank ? `#${idnRank}` : "—"}</strong>
+                <strong>{focusedRank ? `#${focusedRank}` : "—"}</strong>
                 <span>
                   among available
                   <br />
@@ -656,10 +667,10 @@ export default function Observatory({
               <button
                 onClick={() => {
                   setPlaying(false);
-                  setDetail("IDN");
+                  setDetail(focusedCountry.code);
                 }}
               >
-                Explore Indonesia <ArrowUpRight size={15} />
+                Explore {focusedCountry.name} <ArrowUpRight size={15} />
               </button>
               <div className="aside-note">
                 <Info size={15} />
