@@ -1,0 +1,10 @@
+.next/
+node_modules/
+.vercel/
+output/
+.playwright-cli/
+*.tsbuildinfo
+.env*
+data/raw/*
+!data/raw/README.md
+__pycache__/
