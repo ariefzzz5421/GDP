@@ -14,15 +14,20 @@ export default function GlobeCanvas() {
     const element = host.current;
     if (!element) return;
 
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "low-power" });
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: !coarsePointer,
+        powerPreference: "low-power",
+      });
     } catch {
       const timer = window.setTimeout(() => setFailed(true), 0);
       return () => window.clearTimeout(timer);
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarsePointer ? 1.25 : 1.75));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.setAttribute("aria-hidden", "true");
@@ -46,6 +51,9 @@ export default function GlobeCanvas() {
     scene.add(rim);
 
     const controls = new OrbitControls(camera, renderer.domElement);
+    // Let vertical swipes scroll the page; horizontal drags still rotate Earth.
+    // OrbitControls defaults to touch-action:none, which traps mobile scrolling.
+    renderer.domElement.style.touchAction = "pan-y";
     controls.enablePan = false;
     controls.enableZoom = false;
     controls.enableDamping = true;
@@ -58,10 +66,12 @@ export default function GlobeCanvas() {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let inView = true;
     let frame = 0;
+    let lastFrameTime = 0;
+    let contextLost = false;
     let disposed = false;
     let texture: THREE.Texture | undefined;
 
-    const render = () => renderer.render(scene, camera);
+    const render = () => { if (!contextLost) renderer.render(scene, camera); };
     const resize = () => {
       const size = element.clientWidth;
       if (!size) return;
@@ -70,20 +80,37 @@ export default function GlobeCanvas() {
       renderer.setSize(size, size, false);
       render();
     };
-    const tick = () => {
+    const tick = (now: number) => {
       frame = 0;
-      if (!inView || document.hidden || motion.matches) return;
-      controls.update();
-      render();
+      if (!inView || document.hidden || motion.matches || contextLost) return;
+      // A 30fps mobile cap avoids continuously saturating iOS WebGL on scroll.
+      if (!coarsePointer || now - lastFrameTime >= 1000 / 30) {
+        controls.update(lastFrameTime ? (now - lastFrameTime) / 1000 : 1 / 60);
+        render();
+        lastFrameTime = now;
+      }
       frame = requestAnimationFrame(tick);
     };
     const start = () => {
-      if (!frame && inView && !document.hidden && !motion.matches)
+      if (!frame && inView && !document.hidden && !motion.matches && !contextLost)
         frame = requestAnimationFrame(tick);
     };
     const stop = () => {
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
+      lastFrameTime = 0;
+    };
+    const onContextLost = (event: Event) => {
+      event.preventDefault(); // Allow WebKit to restore its WebGL context.
+      contextLost = true;
+      stop();
+      setFailed(true);
+    };
+    const onContextRestored = () => {
+      contextLost = false;
+      setFailed(false);
+      resize();
+      start();
     };
     const updateMotion = () => {
       controls.autoRotate = !motion.matches;
@@ -107,6 +134,8 @@ export default function GlobeCanvas() {
     observer.observe(element);
     const resizer = new ResizeObserver(resize);
     resizer.observe(element);
+    renderer.domElement.addEventListener("webglcontextlost", onContextLost);
+    renderer.domElement.addEventListener("webglcontextrestored", onContextRestored);
     controls.addEventListener("change", onControlChange);
     motion.addEventListener("change", updateMotion);
     document.addEventListener("visibilitychange", onVisibility);
@@ -134,6 +163,8 @@ export default function GlobeCanvas() {
       stop();
       observer.disconnect();
       resizer.disconnect();
+      renderer.domElement.removeEventListener("webglcontextlost", onContextLost);
+      renderer.domElement.removeEventListener("webglcontextrestored", onContextRestored);
       controls.removeEventListener("change", onControlChange);
       motion.removeEventListener("change", updateMotion);
       document.removeEventListener("visibilitychange", onVisibility);
@@ -143,7 +174,8 @@ export default function GlobeCanvas() {
       material.dispose();
       geometry.dispose();
       renderer.dispose();
-      element.removeChild(renderer.domElement);
+      renderer.forceContextLoss(); // Release the GPU context when navigating away.
+      renderer.domElement.remove();
     };
   }, []);
 
