@@ -14,12 +14,11 @@ export default function GlobeCanvas() {
     const element = host.current;
     if (!element) return;
 
-    const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
     let renderer: THREE.WebGLRenderer;
     try {
       renderer = new THREE.WebGLRenderer({
         alpha: true,
-        antialias: !coarsePointer,
+        antialias: true,
         powerPreference: "low-power",
       });
     } catch {
@@ -27,7 +26,7 @@ export default function GlobeCanvas() {
       return () => window.clearTimeout(timer);
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarsePointer ? 1.25 : 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.setAttribute("aria-hidden", "true");
@@ -66,7 +65,6 @@ export default function GlobeCanvas() {
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let inView = true;
     let frame = 0;
-    let lastFrameTime = 0;
     let contextLost = false;
     let disposed = false;
     let texture: THREE.Texture | undefined;
@@ -80,15 +78,11 @@ export default function GlobeCanvas() {
       renderer.setSize(size, size, false);
       render();
     };
-    const tick = (now: number) => {
+    const tick = () => {
       frame = 0;
       if (!inView || document.hidden || motion.matches || contextLost) return;
-      // A 30fps mobile cap avoids continuously saturating iOS WebGL on scroll.
-      if (!coarsePointer || now - lastFrameTime >= 1000 / 30) {
-        controls.update(lastFrameTime ? (now - lastFrameTime) / 1000 : 1 / 60);
-        render();
-        lastFrameTime = now;
-      }
+      controls.update();
+      render();
       frame = requestAnimationFrame(tick);
     };
     const start = () => {
@@ -98,7 +92,6 @@ export default function GlobeCanvas() {
     const stop = () => {
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
-      lastFrameTime = 0;
     };
     const onContextLost = (event: Event) => {
       event.preventDefault(); // Allow WebKit to restore its WebGL context.
