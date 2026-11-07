@@ -43,6 +43,11 @@ registerECharts([
 const colors = ["#4bc9f1", "#f6bd6b", "#b6a1ff", "#f4828f", "#6ed5b2"];
 const lightColors = ["#087eaa", "#a35c08", "#7751a8", "#ae4064", "#087d63"];
 
+function rankedSeriesName(country: Country, ranking?: Record<string, number>) {
+  const rank = ranking?.[country.code];
+  return rank ? `#${rank} ${country.name}` : country.name;
+}
+
 function chartTheme() {
   const light = document.documentElement.dataset.theme === "light";
   return {
@@ -62,11 +67,13 @@ export default function TrendChart({
   dataset,
   countries,
   metric,
+  ranking,
   resetKey = 0,
 }: {
   dataset: Dataset;
   countries: Country[];
   metric: Metric;
+  ranking?: Record<string, number>;
   resetKey?: number;
 }) {
   const el = useRef<HTMLDivElement>(null);
@@ -174,7 +181,7 @@ export default function TrendChart({
         },
       ],
       series: countries.map((c, i) => ({
-        name: c.name,
+        name: rankedSeriesName(c, ranking),
         type: "line",
         showSymbol: false,
         connectNulls: false,
@@ -185,7 +192,7 @@ export default function TrendChart({
       })),
     };
     chart.current.setOption(option, true);
-  }, [dataset, countries, metric, resetKey]);
+  }, [dataset, countries, metric, resetKey, ranking]);
 
   useEffect(() => {
     const updateTheme = () => {
@@ -197,12 +204,12 @@ export default function TrendChart({
         xAxis: { axisLine: { lineStyle: { color: visual.border } }, axisLabel: { color: visual.axis } },
         yAxis: { splitLine: { lineStyle: { color: visual.grid } }, axisLabel: { color: visual.axis } },
         dataZoom: [{}, { borderColor: visual.border, textStyle: { color: visual.axis }, fillerColor: visual.filler, handleStyle: { color: visual.colors[0] }, dataBackground: { lineStyle: { color: visual.axis }, areaStyle: { color: visual.slider } } }],
-        series: countries.map((country, i) => ({ name: country.name, lineStyle: { color: visual.colors[i % visual.colors.length] }, itemStyle: { color: visual.colors[i % visual.colors.length] } })),
+        series: countries.map((country, i) => ({ name: rankedSeriesName(country, ranking), lineStyle: { color: visual.colors[i % visual.colors.length] }, itemStyle: { color: visual.colors[i % visual.colors.length] } })),
       });
     };
     window.addEventListener("gdp-theme-change", updateTheme);
     return () => window.removeEventListener("gdp-theme-change", updateTheme);
-  }, [countries]);
+  }, [countries, ranking]);
 
   return (
     <div
