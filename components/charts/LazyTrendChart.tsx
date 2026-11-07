@@ -10,6 +10,7 @@ export default function LazyTrendChart(props: {
   dataset: Dataset;
   countries: Country[];
   metric: Metric;
+  ranking?: Record<string, number>;
   resetKey?: number;
 }) {
   const element = useRef<HTMLDivElement>(null);
