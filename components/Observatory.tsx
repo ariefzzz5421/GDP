@@ -83,9 +83,11 @@ export default function Observatory({
     "IND",
     "IDN",
   ]);
-  const [compare, setCompare] = useState<string[]>([
-    ...new Set(["USA", "CHN", initialCountry]),
-  ]);
+  const [compare, setCompare] = useState<string[]>(
+    view === "country"
+      ? [...new Set(["USA", "CHN", initialCountry])]
+      : manifest.cohort.slice(0, 5),
+  );
   const [highlight, setHighlight] = useState(initialCountry);
   const [speed, setSpeed] = useState(1);
   const [playing, setPlaying] = useState(false);
@@ -263,9 +265,28 @@ export default function Observatory({
     return rows.slice(0, Number(cohort));
   }, [ranking, cohort, dynamicCohort, selected]);
 
+  // The default comparison cohort uses 2025 nominal GDP, but ranks and
+  // display order always reflect GDP in the year currently selected.
+  const gdpRanking = useMemo(
+    () => dataset ? ranked(dataset.rows, year, "gdp") : [],
+    [dataset, year],
+  );
+  const gdpRankByCode = useMemo(
+    () => new Map(gdpRanking.map((row, index) => [row.code, index + 1])),
+    [gdpRanking],
+  );
   const compared = useMemo(
-    () => compare.map((c) => countryMap.get(c)!).filter(Boolean),
-    [compare],
+    () => compare
+      .map((code) => countryMap.get(code)!)
+      .filter(Boolean)
+      .sort((a, b) =>
+        (gdpRankByCode.get(a.code) ?? Number.MAX_SAFE_INTEGER) -
+        (gdpRankByCode.get(b.code) ?? Number.MAX_SAFE_INTEGER)),
+    [compare, gdpRankByCode],
+  );
+  const comparisonRankLabels = useMemo(
+    () => Object.fromEntries(compared.map((c) => [c.code, gdpRankByCode.get(c.code) ?? 0])),
+    [compared, gdpRankByCode],
   );
 
   const focusedCountry = countryMap.get(highlight) ?? countryMap.get("IDN")!;
@@ -330,6 +351,58 @@ export default function Observatory({
           : view === "country"
             ? `${countryMap.get(initialCountry)?.name}. In perspective.`
             : "The world economy. In motion.";
+
+  const focusContent = (
+    <>
+              <p className="eyebrow">IN FOCUS</p>
+              <Flag country={focusedCountry} />
+              <h3>{focusedCountry.name}</h3>
+              <p className="focus-value">
+                {formatMetric(focusedObservation?.[metric], metric)}
+              </p>
+              <p className="muted">
+                {metric === "gdp"
+                  ? "Total economic output"
+                  : metric === "pc"
+                    ? "Output per person"
+                    : "People"}{" "}
+                · {year}
+              </p>
+              <div className="focus-rank">
+                <strong>{focusedRank ? `#${focusedRank}` : "—"}</strong>
+                <span>
+                  among available
+                  <br />
+                  economies
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setPlaying(false);
+                  setDetail(focusedCountry.code);
+                }}
+              >
+                Explore {focusedCountry.name} <ArrowUpRight size={15} />
+              </button>
+              <div className="aside-note">
+                <Info size={15} />
+                <p>
+                  {metric === "pop"
+                    ? "Population uses source-reported counts. Historical estimates and IMF projections have different certainty; country boundaries can change."
+                    : mode === "modern"
+                    ? "Nominal GDP reflects both economic output and exchange rates. It is not adjusted for inflation."
+                    : mode === "historical"
+                      ? "Historical estimates use purchasing power parity. Modern flags identify series, not historical sovereignty."
+                      : "Forecasts are not outcomes. Each indicator has its own last actual year, supplied by the IMF."}
+                </p>
+              </div>
+              <div className="aside-range">
+                <span>{info.minYear}</span>
+                <i />
+                <span>{info.maxYear}</span>
+              </div>
+    </>
+  );
 
   return (
     <main id="main" className="page">
@@ -582,6 +655,11 @@ export default function Observatory({
                 setSelected([...selected, code]);
             }}
           />
+          {dataset && (
+            <aside className="chart-aside mobile-focus-panel">
+              {focusContent}
+            </aside>
+          )}
           <label className="event-toggle">
             <input
               type="checkbox"
@@ -658,55 +736,7 @@ export default function Observatory({
                 all bars · Select an economy for details
               </p>
             </div>
-            <aside className="chart-aside">
-              <p className="eyebrow">IN FOCUS</p>
-              <Flag country={focusedCountry} />
-              <h3>{focusedCountry.name}</h3>
-              <p className="focus-value">
-                {formatMetric(focusedObservation?.[metric], metric)}
-              </p>
-              <p className="muted">
-                {metric === "gdp"
-                  ? "Total economic output"
-                  : metric === "pc"
-                    ? "Output per person"
-                    : "People"}{" "}
-                · {year}
-              </p>
-              <div className="focus-rank">
-                <strong>{focusedRank ? `#${focusedRank}` : "—"}</strong>
-                <span>
-                  among available
-                  <br />
-                  economies
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setPlaying(false);
-                  setDetail(focusedCountry.code);
-                }}
-              >
-                Explore {focusedCountry.name} <ArrowUpRight size={15} />
-              </button>
-              <div className="aside-note">
-                <Info size={15} />
-                <p>
-                  {metric === "pop"
-                    ? "Population uses source-reported counts. Historical estimates and IMF projections have different certainty; country boundaries can change."
-                    : mode === "modern"
-                    ? "Nominal GDP reflects both economic output and exchange rates. It is not adjusted for inflation."
-                    : mode === "historical"
-                      ? "Historical estimates use purchasing power parity. Modern flags identify series, not historical sovereignty."
-                      : "Forecasts are not outcomes. Each indicator has its own last actual year, supplied by the IMF."}
-                </p>
-              </div>
-              <div className="aside-range">
-                <span>{info.minYear}</span>
-                <i />
-                <span>{info.maxYear}</span>
-              </div>
-            </aside>
+            <aside className="chart-aside">{focusContent}</aside>
           </div>
         )}
 
@@ -893,6 +923,7 @@ export default function Observatory({
                 {compared.map((c) => (
                   <button key={c.code} onClick={() => toggleCompare(c.code)}>
                     <Flag country={c} />
+                    <span className="comparison-rank">#{gdpRankByCode.get(c.code) ?? "—"}</span>
                     {c.name}
                     <X size={13} />
                   </button>
@@ -933,6 +964,7 @@ export default function Observatory({
                 dataset={dataset}
                 countries={compared}
                 metric={metric}
+                ranking={comparisonRankLabels}
                 resetKey={resetKey}
               />
             ) : (
@@ -948,6 +980,7 @@ export default function Observatory({
                 return (
                   <div key={c.code}>
                     <span>
+                      <span className="comparison-rank">#{gdpRankByCode.get(c.code) ?? "—"}</span>
                       <Flag country={c} />
                       {c.name}
                     </span>
@@ -967,7 +1000,8 @@ export default function Observatory({
             <p className="source-note">
               {dataset.source} · {metricUnit(metric, dataset.unit)}. Gaps are left unconnected.
               Endpoints use each country’s first and last available observation;
-              dates can differ. Toggle series in the chart legend.
+              dates can differ. Rankings and order reflect total GDP in {year}.
+              Toggle series in the chart legend.
             </p>
           </section>
 
